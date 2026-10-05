@@ -1,3 +1,55 @@
+MCTier_Core 衍生作品声明 / Derivative Work Notice
+==================================================
+
+本项目 **MCTier_Core** 是基于 MCTier 项目（基线版本 3.8.0）进行的二次开发：
+从原应用中分离并重构其联机核心能力，封装为供第三方项目调用的动态库。
+
+This project **MCTier_Core** is a derivative work based on the MCTier
+project (baseline version 3.8.0). It extracts and refactors the core
+networking capabilities of the original application into a dynamic library
+for use by third-party projects.
+
+### 归属声明 / Attribution（依原协议第 3 条）
+
+```
+基于 MCTier 项目开发
+原作者：MCTier Team
+原项目地址：https://github.com/pmh1314520/MCTier
+
+Based on MCTier Project
+Original Author: MCTier Team
+Original Project: https://github.com/pmh1314520/MCTier
+```
+
+### 版权归属 / Copyright
+
+- MCTier 原始代码 Copyright (c) 2024-2026 青云制作_彭明航（MCTier Team）
+- MCTier_Core 新增与修改代码 Copyright (c) 2026 X-starRelight
+
+### 协议适用 / Applicable License（依原协议第 4 条）
+
+原协议第 4 条要求基于 MCTier 自有代码的衍生作品**以相同协议开源**。
+因此 MCTier_Core 的自有代码**继续完整适用**下方的 MCTier 自定义源码可得
+（Source-Available）非商业许可的全部条款，条款文本未作任何修改。
+
+All of MCTier_Core's own code remains licensed under the identical MCTier
+Custom Source-Available Non-Commercial License reproduced below, without
+modification to any of its terms.
+
+原协议第 5 条所述第三方组件（EasyTier / LGPL-3.0 等）的许可边界同样适用于
+本项目，详见 `THIRD_PARTY_NOTICES.md` 与 `licenses/`。
+
+### 非官方声明 / Non-Affiliation
+
+MCTier_Core 是独立的非官方二次开发项目，与 MCTier 原作者及其团队之间不存在
+隶属、代理、赞助或背书关系。Minecraft 是 Mojang Synergies AB 及其关联主体的
+商标，本项目不是官方 Minecraft 产品。
+
+MCTier_Core is an independent, unofficial derivative project. It is not
+affiliated with, endorsed by, or sponsored by the original author of MCTier.
+
+---
+
 MCTier 自定义源码可得（Source-Available）非商业许可
 ====================================================
 

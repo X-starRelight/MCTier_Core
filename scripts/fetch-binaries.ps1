@@ -3,7 +3,7 @@
     获取 MCTier 构建所需的第三方二进制，并校验 SHA-256。
 
 .DESCRIPTION
-    src-tauri/src/modules/resource_manager.rs 使用编译期宏 include_bytes! 内嵌 4 个
+    src/src/modules/resource_manager.rs 使用编译期宏 include_bytes! 内嵌 4 个
     二进制文件。这些文件体积较大且受各自许可约束，因此按 .gitignore 规则不纳入
     Git 版本库。clone 仓库后需先准备好它们，否则 `cargo build` 会因找不到文件而失败。
 
@@ -11,7 +11,7 @@
       1. 从 EasyTier 官方 Release 下载 easytier-windows-x86_64-v2.5.0.zip；
       2. 从中提取 wintun.dll / WinDivert64.sys / easytier-web*.exe；
       3. 对每个文件校验 SHA-256，不匹配即报错退出；
-      4. 复制到 src-tauri/resources/binaries/。
+      4. 复制到 src/resources/binaries/。
 
     easytier-core.exe 与 easytier-cli.exe 刻意不从官方发布包提取：官方构建在 PE
     导入表中静态导入 Npcap 的 packet.dll，而 Npcap 不是开源软件、未经 Nmap Project
@@ -35,7 +35,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$TargetDir = Join-Path $RepoRoot 'src-tauri\resources\binaries'
+$TargetDir = Join-Path $RepoRoot 'src\resources\binaries'
 $WorkDir = Join-Path ([System.IO.Path]::GetTempPath()) ('mctier-fetch-' + [Guid]::NewGuid().ToString('N'))
 $MaximumArchiveBytes = 128MB
 $MaximumExtractedBytes = 128MB
@@ -364,7 +364,7 @@ try {
         Write-Host ('还缺少需自行重建的文件: ' + ($missingBuilt -join ', ')) -ForegroundColor Yellow
         Write-Host '请先运行: .\scripts\build-easytier-npcap-free.ps1' -ForegroundColor Yellow
     } else {
-        Write-Host 'include_bytes! 所需的 4 个二进制均已就位，现在可以执行 npm run tauri build。' -ForegroundColor Green
+        Write-Host 'include_bytes! 所需的 4 个二进制均已就位，现在可以执行 cargo build --release。' -ForegroundColor Green
     }
 } finally {
     $workItem = Get-Item -LiteralPath $WorkDir -Force -ErrorAction SilentlyContinue

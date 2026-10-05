@@ -1,45 +1,10 @@
 # Logs
 logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-# Dependencies
-node_modules
-
-# Build outputs
-dist
-dist-ssr
-*.local
-/release-artifacts/
-/binaries/
-
-# Android / Gradle
-MCTier-Android.apk
-*.apk
-MCTier-Android/.gradle/
-MCTier-Android/.kotlin/
-MCTier-Android/build/
-MCTier-Android/app/build/
-MCTier-Android/local.properties
-MCTier-Android/.idea/
-MCTier-Android/.cxx/
-MCTier-Android/.externalNativeBuild/
-MCTier-Android/captures/
-MCTier-Android/*.apk
-MCTier-Android/*.aab
-MCTier-Android/*.ap_
-MCTier-Android/*.dex
-MCTier-Android/ui_now.xml
-MCTier-Android/screen_now.png
-MCTier-Android/color_sample.txt
-
-# Tauri / Rust
-src-tauri/target
-src-tauri/WixTools
+# Rust
+src/target
+src/WixTools
 
 # Compiled executables
 *.exe
@@ -48,17 +13,16 @@ src-tauri/WixTools
 *.sys
 # Linux 侧的 EasyTier 二进制没有扩展名，*.exe 之类的规则挡不住，需要显式忽略。
 # 与 Windows 二进制同理：第三方产物、体积大，构建前用
-# MCTier-Linux/scripts/fetch-binaries.sh 获取并校验 SHA-256。
-src-tauri/resources/binaries/linux/
+# scripts/fetch-binaries.ps1 获取并校验 SHA-256。
+src/resources/binaries/linux/
 
 # Config directories
 config_mctier-*
 
 # Test files and reports
-# tests/ 不再整体忽略，否则 npm test 没有任何可跑的用例（见 issue #17）。
+# tests/ 不再整体忽略，仅忽略快照产物。
 tests/**/__snapshots__/
 # 早期回归实验的遗留用例：相对路径已失效且与顶层同名用例重复，不纳入版本库。
-tests/reverted-ui/
 *_TEST_REPORT.md
 *_DEBUG_GUIDE.md
 *_GUIDE.md
@@ -89,8 +53,6 @@ Thumbs.db
 /0
 /buildout.txt
 /latest.json
-/public/file-preview/
-/MCTier-Android/app/src/main/assets/file-preview/
 /shared/generated/
 /shared/image-optimizer/target/
 /.emoji-build/
@@ -122,12 +84,3 @@ __pycache__/
 *.pfx
 *.jks
 *.keystore
-build-paths.local.json
-signing.local.json
-/public/pdfjs/
-
-# Local verification output and unused source duplicates.
-/docs/verification-*/
-/public/tauri.svg
-/MCTier-Android/wx.png
-/MCTier-Android/zfb.jpg

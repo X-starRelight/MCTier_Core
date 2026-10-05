@@ -3,7 +3,7 @@
 param([Parameter(Mandatory = $true)][string]$CargoTargetDirectory)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-$cargo = [IO.File]::ReadAllText((Join-Path $repo 'src-tauri\Cargo.toml'))
+$cargo = [IO.File]::ReadAllText((Join-Path $repo 'src\Cargo.toml'))
 $match = [regex]::Match($cargo, '(?m)^sherpa-onnx\s*=\s*"=([0-9.]+)"')
 if (-not $match.Success) { throw 'Expected a pinned sherpa-onnx version in Cargo.toml.' }
 $version = $match.Groups[1].Value

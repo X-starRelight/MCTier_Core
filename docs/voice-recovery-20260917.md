@@ -22,6 +22,9 @@ These are independently reproducible defects that can cause or prolong one-way v
 - Desktop offer, answer, track, health, and connection callbacks check connection identity. Answer generation binds the microphone to the offered audio m-line. Local microphone transitions cannot be overwritten by health sampling; ended desktop capture tracks trigger bounded capture recovery, and one failed peer binding does not abort all peers.
 - Global mute, per-peer mute/volume, voice groups, and chat-recording transmit suppression remain authoritative. Health checks never enable the local microphone or bypass the capture gate.
 
+> 本文为原 MCTier 时期的修复记录。其中 `src/`（前端）、`MCTier-Android/` 与
+> 已删除的测试文件路径均已随 MCTier_Core 阶段 1 移除，仅作历史留档。
+
 ## Files
 
 - src/services/webrtc/WebRTCClient.ts

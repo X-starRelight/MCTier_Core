@@ -22,7 +22,7 @@ To prepare it manually, use the same absolute target directory as Cargo:
 ```powershell
 $env:CARGO_TARGET_DIR = 'D:\MCTierBuildCache'
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\prepare-sherpa-windows.ps1 -CargoTargetDirectory $env:CARGO_TARGET_DIR
-npm run tauri build -- --bundles nsis --ci
+cargo build --release
 ```
 
 The outer `update_version.ps1` obtains this path from `build-paths.local.json`

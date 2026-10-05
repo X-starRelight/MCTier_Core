@@ -1,5 +1,10 @@
 # 安全策略
 
+> 本项目 **MCTier_Core** 是基于 [MCTier](https://github.com/pmh1314520/MCTier) 的非官方衍生项目。
+> 针对**原 MCTier 项目本身**的安全问题，请向原作者报告：
+> <https://github.com/pmh1314520/MCTier/security/advisories/new>
+> 本文件仅处理 MCTier_Core 自身引入或继承的代码中的问题。
+
 ## 支持范围
 
 安全修复仅针对最新发布版本。请在报告前确认问题在最新版仍可复现。
@@ -10,11 +15,11 @@
 
 请通过以下方式私下联系：
 
-- GitHub Security Advisory：<https://github.com/pmh1314520/MCTier/security/advisories/new>
+- GitHub Security Advisory：<https://github.com/X-starRelight/MCTier_Core/security/advisories/new>
 
 报告时请尽量包含：
 
-- 影响的组件（桌面端 / Android 端 / 信令服务器）与版本号
+- 影响的组件（核心动态库 / 信令交互 / 具体调用方平台）与版本号
 - 复现步骤或最小复现样例
 - 影响范围评估（可读取的数据、可执行的操作）
 

@@ -29,6 +29,6 @@
 ## 验证
 
 - `node --test tests/*.test.mjs`：263 项全部通过，覆盖采集选择/取消、旧响应竞态、二进制边界、帧背压、原生结束通知、WebCodecs 与 Canvas 清理、共享画质/编码、远程会话与 PDF 引擎回归。原生采集 4 项和麦克风授权 3 项测试也全部通过。
-- 先在应用根目录运行 `npm run build`，再在 `src-tauri` 目录运行 `cargo check --release --lib` 与 `cargo build --release --bin mctier --features tauri/custom-protocol`。必须在该目录执行，让 `.cargo/config.toml` 的静态 CRT 设置生效；发布 EXE 必须启用 `tauri/custom-protocol`，以嵌入前端资源并使用应用来源，不能依赖开发服务器。常规安装包发布可使用 `npm run tauri build`。
+- 在 `src` 目录运行 `cargo check --release --lib` 与 `cargo test --release --lib native_capture`。必须在该目录执行，让 `.cargo/config.toml` 的静态 CRT 设置生效。原 MCTier 时期另有前端构建与 `--bin mctier --features tauri/custom-protocol` 的发布流程，已随 GUI 一并移除。
 - `cargo test --release --lib native_capture -- --include-ignored --test-threads=1` 含交互式 Windows/D3D11 测试：真实显示器画面、GPU 色序与缩放，以及窗口尺寸变化和关闭；非交互构建机应省略 `--include-ignored`。本机 Rust 测试可执行文件需用 Windows SDK `mt.exe` 嵌入 `build.rs` 中的 Common Controls 清单后运行，否则依赖的 `TaskDialogIndirect` 会使测试进程在进入测试前退出。
 - 本次 Tabbit 启动器仍退出失败，未完成真实 WebView2 选择器的视觉操作、最小化后台长时间播放、Android 接收与多显示器硬件组合验收。不能把源码/单机采集测试当成这些场景已通过。

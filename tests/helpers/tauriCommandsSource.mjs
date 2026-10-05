@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const commandModuleDir = fileURLToPath(
-  new URL('../../src-tauri/src/modules/tauri_commands', import.meta.url),
+  new URL('../../src/src/modules/tauri_commands', import.meta.url),
 );
 
 export function readTauriCommandSources() {

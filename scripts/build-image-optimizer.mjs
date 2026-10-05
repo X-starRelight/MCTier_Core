@@ -12,7 +12,7 @@ const ndk = process.env.ANDROID_NDK_HOME || process.env.ANDROID_NDK_ROOT || (ndk
 if (!ndk || !existsSync(join(ndk, 'build/cmake/android.toolchain.cmake'))) throw new Error('Install an Android NDK and configure ANDROID_NDK_HOME or ANDROID_HOME.');
 const cmakeVersion = sdk && latest(join(sdk, 'cmake'));
 const cmakeBin = cmakeVersion && join(sdk, 'cmake', cmakeVersion, 'bin');
-const output = resolve(process.argv[2] || join(root, 'MCTier-Android/app/build/generated/imageOptimizerJni'));
+const output = resolve(process.argv[2] || join(root, 'shared/generated/imageOptimizerJni'));
 const result = spawnSync('cargo', ['ndk', '-t', 'arm64-v8a', '-P', '26', '-o', output, 'build', '--release', '--locked'], {
   cwd: join(root, 'shared/image-optimizer'), stdio: 'inherit', windowsHide: true,
   env: { ...process.env, ANDROID_NDK_HOME: ndk, ANDROID_NDK_ROOT: ndk, NDK_HOME: ndk,

@@ -35,7 +35,7 @@ Android 原先把设备标识散列到 240 个地址，发生碰撞后没有恢�
 - 桌面 TypeScript/Vite 构建和 Android 主程序/单元测试 Kotlin 编译。
 
 本次最终结果：JavaScript 214 项、Android JUnit 53 项、桌面 Rust 大厅相关
-50 项、信令服务器 68 项全部通过；`npm run build` 与 `cargo check --lib` 通过。
+50 项、信令服务器 68 项全部通过；`npm run build`（已随前端移除，当时通过）与 `cargo check --lib` 通过。
 Android 的 `testDebugUnitTest` 使用仓库现有的 `jvmSecurityHardeningTest`
 运行 JUnit，不能将外层任务显示的 SKIPPED 误解为未运行测试。
 

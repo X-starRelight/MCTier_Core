@@ -12,7 +12,7 @@ Windows 的开麦、语音消息、设备试音与变声试听统一使用 Rust 
 
 Windows 原生打开失败不会回退 `getUserMedia`。其它桌面平台保留原浏览器采集分支。此前 WebView2 自定义授权组件已移除，原浏览器媒体请求统一拒绝以避免意外浏览器弹窗。设置中的分类改为「重置软件」；重置按钮继续只清理 WebView 数据并重启，保留应用配置文件，符合此前确认的行为。
 
-验证命令：`node --test tests/*.test.mjs`、`npm run build`；在 `src-tauri` 目录执行 `cargo test --release --lib --features tauri/custom-protocol native_microphone --no-run`。原生交互测试 `default_device_captures_pcm_and_releases_on_repeated_stop` 默认忽略，仅在有麦克风的 Windows 上用 `--include-ignored --test-threads=1` 运行，短暂读取两轮音频并释放，不保存或发送采集内容。测试 EXE 若缺少 Common Controls 清单，需按 [屏幕采集说明](native-screen-capture.md) 嵌入清单。
+验证命令：在 `src` 目录执行 `cargo test --release --lib native_microphone --no-run`（原生麦克风测试）；仓库保留的前端期测试用 `node --test tests/*.test.mjs` 运行。原生交互测试 `default_device_captures_pcm_and_releases_on_repeated_stop` 默认忽略，仅在有麦克风的 Windows 上用 `--include-ignored --test-threads=1` 运行，短暂读取两轮音频并释放，不保存或发送采集内容。测试 EXE 若缺少 Common Controls 清单，需按 [屏幕采集说明](native-screen-capture.md) 嵌入清单。
 
 2026-09-30 无声问题排查：测试机常规默认输入为 Realtek 麦克风阵列，通信默认输入为 Voicemeeter Out B3。此前把「系统默认」映射到通信端点，读取到全零 PCM。改为常规默认后，两轮真实采集均收到非零样本，测试断言采集端点等于枚举得到的常规默认端点。麦克风桥接与试音主动恢复 AudioContext，恢复失败或超时会释放设备并报错。播放错误写入 `mctier.log` 的 `[AudioPipeline]` 记录；已保存输出失效时尝试回退默认输出，扬声器切换及试音失败不再提示成功。
 
@@ -20,4 +20,4 @@ Windows 原生打开失败不会回退 `getUserMedia`。其它桌面平台保留
 
 2026-10-01 的现场诊断已确认实时通话停在 ICE checking 后失败；原生采集没有触发浏览器媒体授权，Chromium 只提供 mDNS 地址且未枚举虚拟网卡。已添加 Rust 本机虚拟网卡 STUN 探测，详见 [实时通话诊断](realtime-voice-diagnostics.md)。仍保留原生采集和浏览器采集拒绝策略。Windows 与 Android 双机听感、长时间后台通话和所有驱动组合仍需实机验证，不能以本地双向测试代替跨设备验收。
 
-修复版 Windows EXE 已完成 release 构建（2026-09-30 23:02，202,032,640 字节），位于 `src-tauri/target/release/mctier.exe`。
+修复版 Windows EXE 已完成 release 构建（2026-09-30 23:02，202,032,640 字节），位于 `src/target/release/mctier.exe`。

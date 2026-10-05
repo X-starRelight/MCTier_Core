@@ -20,7 +20,7 @@
 - 两端由 SenseVoice `OfflineRecognizer` 切换至 Zipformer-CTC `OnlineRecognizer`；禁用自动端点重置，按一秒音频块解码，末尾补 0.66 秒静音并调用 input-finished，保留整段文本并处理最后一个窗口。此处 Online 指流式推理接口，不是在线网络服务。
 - 结果仍展示在原语音消息下方，没有改回弹窗。
 
-主要文件：`shared/speech-model.json`、`scripts/prepare-speech-model.mjs`、`scripts/verify-bundled-speech.mjs`、`src-tauri/build.rs`、`src-tauri/Cargo.toml`/`Cargo.lock`、`src-tauri/src/modules/speech_transcription.rs`、Android `ui/SpeechModel.kt` / `ui/VoiceMessageTranscriber.kt`、双端相关测试及 `THIRD_PARTY_NOTICES.md`。
+主要文件：`shared/speech-model.json`、`scripts/prepare-speech-model.mjs`、`src/build.rs`、`src/Cargo.toml`/`Cargo.lock`、`src/src/modules/speech_transcription.rs` 及 `THIRD_PARTY_NOTICES.md`。（原双端清单中的 `scripts/verify-bundled-speech.mjs` 与 Android 端 `ui/SpeechModel.kt` / `ui/VoiceMessageTranscriber.kt` 已随 GUI 与 Android 工程移除。）
 
 ## 验证结果
 

@@ -1,11 +1,23 @@
 # 第三方组件声明 / Third-Party Notices
 
-本文件说明 MCTier 发布版本中包含的第三方组件、其许可证、来源、版本与修改状态。
+本文件说明 MCTier_Core 发布版本中包含的第三方组件、其许可证、来源、版本与修改状态。
 
-This file documents the third-party components distributed with MCTier, together with
+This file documents the third-party components distributed with MCTier_Core, together with
 their licenses, upstream sources, versions and modification status.
 
-最后更新 / Last updated: 2026-10-04（对应 MCTier 3.10.0）
+最后更新 / Last updated: 2026-09-29（基线：MCTier 3.8.0）
+
+> **衍生说明 / Derivative note**：MCTier_Core 是基于 [MCTier](https://github.com/pmh1314520/MCTier)
+> 3.8.0 的非官方衍生项目，本文件继承自原项目并随本项目的分发物同步维护。
+> 凡以「MCTier」指代原项目及其原作者之处，其历史事实与义务主体不变；凡描述本项目分发物
+> 与本项目代码之处，以「MCTier_Core」指代。
+>
+> MCTier_Core is an unofficial derivative of MCTier 3.8.0; this file is inherited from the
+> original project and maintained for MCTier_Core's own distributions.
+
+**LGPL-3.0 源码义务承接**：本项目分发（含以原样或修改形式）EasyTier、WinDivert 等
+LGPL-3.0 组件，因而**与原项目一样承担 LGPL-3.0 的对应源码提供义务**。§5、§6 描述的
+源码、补丁与重建说明在本项目的发布周期内同样持续有效，获取方式见 §6。
 
 ---
 
@@ -24,7 +36,7 @@ their licenses, upstream sources, versions and modification status.
 | GTCRN 模型权重 (`*.gguf`，仅 Android 端) | https://huggingface.co/LocalAI-io/LocalVQE | pi-v1-49k-f32 | — | 训练数据含 CC BY 4.0 素材 | 否 / No（见 §9） |
 | WebRTC | https://webrtc.googlesource.com/src | 见 §10 | — | BSD-3-Clause | 否 / No |
 
-> 说明：本表覆盖 MCTier 分发物中所有**内嵌或随包分发**的第三方二进制与模型。
+> 说明：本表覆盖 MCTier_Core 分发物中所有**内嵌或随包分发**的第三方二进制与模型。
 > 应用级依赖（npm / crate / Gradle）见 §10。
 
 ---
@@ -40,7 +52,7 @@ Source: https://github.com/EasyTier/EasyTier
 
 EasyTier 上游项目在其仓库根目录以 LGPL-3.0 授权（`LICENSE`，即 GNU LGPL-3.0 全文），
 其 `easytier/Cargo.toml` 中 `authors = ["kkrainbow"]`、`license-file = "LICENSE"`。
-MCTier 不对 EasyTier 的版权主体作任何额外主张。
+MCTier 与 MCTier_Core 均不对 EasyTier 的版权主体作任何额外主张。
 
 许可证全文见本仓库：
 
@@ -52,10 +64,11 @@ MCTier 不对 EasyTier 的版权主体作任何额外主张。
 
 ## 3. 许可证边界 / License Boundary
 
-- MCTier 自有代码使用 MCTier 自定义**源码可得（source-available）非商业**许可（见 `LICENSE`）。
+- MCTier 自有代码使用 MCTier 自定义**源码可得（source-available）非商业**许可（见 `LICENSE`）；
+  MCTier_Core 依该许可第 4 条以**相同协议**承接授权，其自有代码继续适用同一许可。
 - **本表及下文列出的全部第三方组件**（EasyTier、Wintun、WinDivert、
-  LocalVQE、GGML、模型权重、WebRTC 及各应用级依赖），连同 MCTier 对它们所作的任何
-  衍生或修改部分，**均不适用** MCTier 自定义许可，而继续按各自许可证授权。
+  LocalVQE、GGML、模型权重、WebRTC 及各应用级依赖），连同 MCTier 与 MCTier_Core
+  对它们所作的任何衍生或修改部分，**均不适用** MCTier 自定义许可，而继续按各自许可证授权。
 - MCTier 自定义许可中的“禁止商业用途”“二次开发必须以相同协议开源”等条款
   **不适用于**上述任何第三方组件，也**不得**被解释为限制其许可证
   （LGPL-3.0、GPL-2.0、Apache-2.0、MIT、BSD-3-Clause、CC BY 4.0 等）
@@ -66,17 +79,17 @@ MCTier 不对 EasyTier 的版权主体作任何额外主张。
 
 ### 3.1 许可证文本如何随发行版交付 / How License Texts Are Delivered
 
-LGPL-3.0 要求许可证文本随发行版一同提供，因此两端均**不依赖联网**即可读到全文：
+LGPL-3.0 要求许可证文本随发行版一同提供，因此分发本库时应**不依赖联网**即可读到全文：
 
-- **Windows 桌面端**：`src-tauri/tauri.conf.json` 的 `bundle.resources` 将 `LICENSE`、
-  `THIRD_PARTY_NOTICES.md`、`licenses/*`（含 LGPL-3.0 与 GPL-3.0 全文）以及 Android 端的
-  EasyTier 补丁一并打进安装包的 `licenses/` 目录；应用「关于」窗口另有第三方组件声明区块。
-- **Android 端**：`MCTier-Android/app/build.gradle.kts` 的 `syncLicenseAssets` 任务在构建时
-  从仓库根目录复制 `LICENSE`（打包为 `LICENSE.txt`）、`LICENSE-LGPL-3.0.txt`、
-  `LICENSE-GPL-3.0.txt`、`THIRD_PARTY_NOTICES.md` 与 EasyTier 补丁进 APK 的 `assets/`；
-  「关于 → 开源许可与第三方组件」可直接在应用内查看这些全文。
-  这些文件由构建任务从**单一来源**同步，不存在与仓库根目录不一致的副本；
-  `isShrinkResources` 不会移除 `assets/` 下的文件（已在 release 产物中核验）。
+- 随仓库根目录分发 `LICENSE`、`THIRD_PARTY_NOTICES.md`、`LICENSE-LGPL-3.0.txt`、
+  `LICENSE-GPL-3.0.txt`、`THIRD_PARTY_NOTICES.md` 与 `licenses/*`（含 LGPL-3.0 与
+  GPL-3.0 全文）以及 EasyTier 补丁；随二进制分发时应把上述文件一并放入交付目录。
+- MCTier_Core 作为动态库交付，不包含应用内的「关于」窗口；调用方如需在自身界面展示
+  第三方组件声明，直接引用 `THIRD_PARTY_NOTICES.md` 与 `licenses/` 下的全文即可。
+
+> 原 MCTier 桌面应用通过 `tauri.conf.json` 的 `bundle.resources` 打包、Android 端通过
+> `syncLicenseAssets` 任务复制，两端均从仓库根目录的**单一来源**同步；该打包流程已随
+> GUI 一并移除，本节改述为对分发方的一般要求。
 
 ---
 
@@ -84,17 +97,17 @@ LGPL-3.0 要求许可证文本随发行版一同提供，因此两端均**不依
 
 **集成方式：独立进程（未链接 EasyTier 库）**
 
-- MCTier 通过 `std::process::Command::new(&easytier_path)` 以**独立子进程**方式启动
+- MCTier_Core 通过 `std::process::Command::new(&easytier_path)` 以**独立子进程**方式启动
   `easytier-core.exe`，并通过命令行参数与标准输出交互
-  （见 `src-tauri/src/modules/network_service.rs`）。
+  （见 `src/src/modules/network_service.rs`）。
 - `easytier-core.exe` / `easytier-cli.exe` 为上游官方发布的**独立可执行文件**，
-  由 `src-tauri/src/modules/resource_manager.rs` 在运行时释放到应用数据目录后调用。
-- MCTier 的 Rust 工程**没有**依赖 `easytier` crate：`src-tauri/Cargo.toml` 与
-  `src-tauri/Cargo.lock` 中均不存在 `easytier` 依赖项，不存在静态链接、动态库调用或 FFI。
+  由 `src/src/modules/resource_manager.rs` 在运行时释放到应用数据目录后调用。
+- 本工程**没有**依赖 `easytier` crate：`src/Cargo.toml` 与
+  `src/Cargo.lock` 中均不存在 `easytier` 依赖项，不存在静态链接、动态库调用或 FFI。
 
 **未修改性证明（SHA-256）**
 
-MCTier 发布包中分发的 EasyTier 二进制（构建时取自 `src-tauri/resources/binaries/`；
+MCTier_Core 发布包中分发的 EasyTier 二进制（构建时取自 `src/resources/binaries/`；
 该目录下的 `.exe` / `.dll` 按 `.gitignore` 规则不纳入 Git 版本库，构建时直接使用上游官方发布包原件）
 与上游官方发布包 `easytier-windows-x86_64-v2.5.0.zip`（tag `v2.5.0`）逐字节一致：
 
@@ -119,9 +132,11 @@ MCTier 发布包中分发的 EasyTier 二进制（构建时取自 `src-tauri/res
 - `libeasytier_ffi.so`：EasyTier 的 C ABI 动态库（`easytier-contrib/easytier-ffi`）。
 - `libeasytier_android_jni.so`：EasyTier 的 Android JNI 动态库
   （`easytier-contrib/easytier-android-jni`），动态链接 `libeasytier_ffi.so`。
-- 位置：`MCTier-Android/app/src/main/jniLibs/arm64-v8a/`（已纳入 Git 版本库），
-  安装后位于 APK 的 `lib/arm64-v8a/`。
-- 由 `MCTier-Android/scripts/build-easytier-jni.ps1` 通过 Android NDK 交叉编译产生。
+- 位置：原在 `MCTier-Android/app/src/main/jniLibs/arm64-v8a/`，安装后位于 APK 的
+  `lib/arm64-v8a/`；原由 `MCTier-Android/scripts/build-easytier-jni.ps1` 通过
+  Android NDK 交叉编译产生。该 Android 工程已随 MCTier_Core 阶段 1 整体移除，
+  `.so` 的重建指引保留于
+  [docs/android/rebuild-with-modified-easytier.md](docs/android/rebuild-with-modified-easytier.md)。
 
 **修改状态：已修改（B）**
 
@@ -182,7 +197,7 @@ tag 为基线**的完整差异记录，其中同时包含「上游中间提交�
 
 ## 6. 源码获取方式 / How to Obtain the Corresponding Source
 
-使用者**无需联系 MCTier 作者**即可获得 EasyTier 对应源码：
+使用者**无需联系 MCTier 或 MCTier_Core 作者**即可获得 EasyTier 对应源码：
 
 1. **上游源码**：https://github.com/EasyTier/EasyTier
    - Windows 端：tag `v2.5.0`
@@ -193,13 +208,15 @@ tag 为基线**的完整差异记录，其中同时包含「上游中间提交�
    （随源码仓库公开分发，GitHub 与 Gitee 镜像均可获取）。
 3. **重新构建说明**：`docs/android/rebuild-with-modified-easytier.md`。
 
-MCTier 承诺在提供对应发布版本期间持续保持上述源码与补丁可公开获取。
+MCTier 承诺在提供对应发布版本期间持续保持上述源码与补丁可公开获取；
+MCTier_Core 在其自身发布周期内同样保持上述源码与补丁可公开获取。
 
 ---
 
 ## 7. Windows 端其他内嵌二进制 / Other Bundled Windows Binaries
 
-以下二进制随 EasyTier 官方 Windows 发布包一同获得，构建时内嵌进 `MCTier.exe`，
+以下二进制随 EasyTier 官方 Windows 发布包一同获得，构建时内嵌进本项目产物
+（原 MCTier 桌面应用为 `MCTier.exe`；MCTier_Core 同样内嵌），
 运行期由 `resource_manager.rs` 释放到应用数据目录，供 `easytier-core.exe` 使用。
 均**未经修改**，SHA-256 可独立复核。两者均允许随本项目再分发。
 
@@ -213,14 +230,14 @@ MCTier 承诺在提供对应发布版本期间持续保持上述源码与补丁�
 Wintun 官方 `Prebuilt Binaries License` 全文见 `licenses/LICENSE-Wintun.txt`
 （取自 `https://www.wintun.net/builds/wintun-0.14.1.zip` 内 `wintun/LICENSE.txt`）。
 
-MCTier 仅通过官方 `wintun.h` 暴露的 Permitted API 间接使用该库（由 EasyTier 调用），
+MCTier 与 MCTier_Core 均仅通过官方 `wintun.h` 暴露的 Permitted API 间接使用该库（由 EasyTier 调用），
 未反向工程、未修改、未移除任何版权或专有声明，符合其 §3(b)(c)(d)。
 
-依其 §3(e)：**WireGuard LLC、WireGuard 项目与 Wintun 项目均未对 MCTier 作任何背书。**
+依其 §3(e)：**WireGuard LLC、WireGuard 项目与 Wintun 项目均未对 MCTier 或 MCTier_Core 作任何背书。**
 
 ### WinDivert
 
-WinDivert 采用 LGPL-3.0 / GPL-2.0 双许可。**MCTier 选择 LGPL-3.0 分支。**
+WinDivert 采用 LGPL-3.0 / GPL-2.0 双许可。**MCTier 与 MCTier_Core 均选择 LGPL-3.0 分支。**
 
 - LGPL-3.0 全文：`licenses/LICENSE-LGPL-3.0.txt`
 - GPL-3.0 全文（LGPL-3.0 引用并入）：`licenses/LICENSE-GPL-3.0.txt`
@@ -233,7 +250,7 @@ WinDivert 属 §3 许可证边界所述的 LGPL 组件，MCTier 自定义协议�
 
 ## 8. Npcap 依赖的移除 / Removal of the Npcap Dependency
 
-**当前状态：MCTier 不再包含、也不再需要任何 Npcap 文件。**
+**当前状态：MCTier_Core 不再包含、也不再需要任何 Npcap 文件。**
 
 此前的 Windows 发布包捆绑了 Npcap 的 `Packet.dll`。Npcap 不是开源软件，未经
 Nmap Project 书面许可不得随其他软件再分发，而本项目并未取得该许可，因此这是一处
@@ -247,8 +264,8 @@ Nmap Project 书面许可不得随其他软件再分发，而本项目并未取�
 会直接以 `0xC0000135`（`STATUS_DLL_NOT_FOUND`）失败——即使全程使用 Wintun 模式、
 从未打开任何 datalink channel 也一样。也就是说，**单纯删掉 `Packet.dll` 会让组网完全不可用**。
 
-该硬依赖**不是**由某个 pcap/npcap feature 开关引入的，也不是 MCTier 自身代码调用了
-Npcap（MCTier 的源码中没有任何 Npcap 调用）。源码级成因：
+该硬依赖**不是**由某个 pcap/npcap feature 开关引入的，也不是本项目代码调用了
+Npcap（本项目的源码中没有任何 Npcap 调用）。源码级成因：
 
 - `pnet_datalink-0.35.0/src/bindings/winpcap.rs` 中的 `#[link(name = "Packet")]`
   仅由 `#[cfg(windows)]` 门控，**并未**置于任何 `pcap` feature 之后；
@@ -408,7 +425,7 @@ Wintun / WireGuard 相关声明见 §7。
 
 ## 13. 维护承诺 / Maintenance Commitment
 
-每次升级第三方组件时，MCTier 将同步更新本文件中的：版本号、commit SHA、修改状态、
+每次升级第三方组件时，MCTier_Core 将同步更新本文件中的：版本号、commit SHA、修改状态、
 补丁文件与二进制 SHA-256，并在发布说明中一并记录。
 
 ## 14. 本地文件预览与语音转写 / Local Preview and Transcription

@@ -1,1 +1,0 @@
-export { VersionUpdateModal } from './VersionUpdateModal';

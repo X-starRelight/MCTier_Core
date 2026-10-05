@@ -20,7 +20,7 @@
       4. cargo build --release 出 easytier-core / easytier-cli；
       5. 解析产物 PE 导入表，确认其中不含 packet.dll —— 这一步是硬门槛，
          不通过即中止，避免"看起来构建成功但其实依赖仍在"；
-      6. 复制到 src-tauri/resources/binaries/。
+      6. 复制到 src/resources/binaries/。
 
     刻意不关闭 pnet 的默认 feature：那样会连 pnet::datalink::interfaces() 一起去掉，
     而 EasyTier 在 Windows 上把它用作接口枚举失败时的回退路径。补丁只改链接方式，
@@ -51,7 +51,7 @@ $PnetDatalinkVersion = '0.35.0'
 $PnetDatalinkUrl = "https://static.crates.io/crates/pnet_datalink/pnet_datalink-$PnetDatalinkVersion.crate"
 
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$TargetDir = Join-Path $RepoRoot 'src-tauri\resources\binaries'
+$TargetDir = Join-Path $RepoRoot 'src\resources\binaries'
 $PatchFile = Join-Path $RepoRoot 'patches\pnet_datalink-0.35.0-no-npcap.patch'
 $WorkDir = Join-Path ([System.IO.Path]::GetTempPath()) ('mctier-easytier-' + [Guid]::NewGuid().ToString('N'))
 
