@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/version-0.1.0--dev-blue?style=flat-square" alt="Version">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-brightgreen?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android-brightgreen?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/FFI-C%20ABI-orange?style=flat-square" alt="FFI">
   <img src="https://img.shields.io/badge/license-Custom%20Source--Available-orange?style=flat-square" alt="License">
 </p>
@@ -46,8 +46,7 @@ Rust 后端能力，去掉窗口、托盘、热键、WebView 等全部界面层�
 | 虚拟组网 | EasyTier 组网启停、虚拟 IP 分配、节点选择、KCP/QUIC 高级参数、出口节点配置 |
 | 大厅 | 创建 / 加入 / 离开大厅、玩家列表、房主管理（公告、人数、踢人）、公开大厅广场、邀请信息 |
 | 信令与打洞 | WebSocket 信令、P2P 打洞、成员状态与心跳、断线重连自愈、私有化信令地址 |
-| 语音 | 语音频道、语音小队、麦克风开关与静音、ICE 服务发现、语音消息转写 |
-| 聊天 | P2P 文字 / 图片 / Emoji 消息、P-256 签名鉴权、消息漫游与清理 |
+| 聊天 | P2P 文字 / 图片消息、P-256 签名鉴权、消息漫游与清理 |
 | 文件协作 | 本地共享目录管理、远程文件浏览与下载、共享密码校验、传输进度事件 |
 | 游戏增强 | Minecraft 局域网世界发现、MC LAN 广播、服务器扫描与延迟测量 |
 | 诊断与运维 | 网络诊断（虚拟网卡 / 防火墙 / UDP 端口）、防火墙一键放行、连接质量评分、日志读写 |
@@ -56,25 +55,18 @@ Rust 后端能力，去掉窗口、托盘、热键、WebView 等全部界面层�
 所有面向界面的纯 GUI 能力（窗口透明度、托盘、全局热键、弹幕窗、GameHUD、文件选择对话框等）
 **不属于本项目范围**，由调用方自行实现。
 
-## 项目状态
+> ## ⚠️ 项目定位：DEMO
+>
+> **本项目是 DEMO，不是正式版产品，不承诺完全可用。**
+> 它不保证在生产环境长期稳定运行，不提供 ABI 版本兼容承诺，也不建立 CI。
+> 工程实现本身仍按生产级标准执行（契约完整、四平台产物齐全、错误与并发语义明确），
+> 但「DEMO」限定的是**交付承诺**，不是**质量标准**。
+>
+> 以下能力已从本项目移除：**实时语音**（语音频道 / 语音小队 / 麦克风 / ICE 服务 / 语音转写）、
+> **屏幕共享**、**夸克网盘助力**、**内置 Emoji 资源包**。
+> 聊天中的文字、图片、Emoji 与**语音条**消息仍保留（属消息存储，非实时流）。
 
-改造分阶段进行，当前处于**阶段 2（解除 Tauri 依赖）**：
-
-| 阶段 | 内容 | 状态 |
-| --- | --- | --- |
-| 0 | LICENSE 衍生声明、源文件归属头、README / SECURITY 改写 | ✅ 已完成 |
-| 1 | 删除 GUI（React 前端、Tauri 壳、纯 GUI 命令与模块） | ✅ 已完成 |
-| 2 | 解除 Tauri 依赖（事件总线、路径注入、去 `AppHandle`） | ⏳ 进行中 |
-| 3 | 命令层重构为统一分发表 | ⏳ |
-| 4 | C ABI FFI 层、头文件、C 示例 | ⏳ |
-| 5 | 构建系统与改名（含 Android 交叉编译） | ⏳ |
-| 6 | 三平台验证与测试清理 | ⏳ |
-
-> 阶段 1 完成后，前端、Tauri 壳与纯 GUI 命令已删除，`src-tauri/` 已更名为 `src/`；
-> 但 `Cargo.toml` 尚未移除 `tauri` 依赖（阶段 2 的工作），因此 Linux 上 `cargo build`
-> 仍需先装 WebKitGTK / GTK 系统库。
-
-## FFI 接口设计（阶段 4 实现）
+## FFI 接口设计
 
 ```c
 typedef void (*MctierEventCb)(const char* event, const char* payload_json, void* user_data);
@@ -89,17 +81,23 @@ void    mctier_core_shutdown(void);
 
 - `call` 为异步调用，结果以 `command-result` 事件携带 `req_id` 回吐，事件模型与原 MCTier 的
   `invoke` 保持同构，便于迁移既有逻辑。
+- **出口模式在 `init` 时二选一**：传回调 → 库内部单线程顺序分发（`read_frame`/`poll` 恒返回 0）；
+  回调传 `NULL` → 纯拉取模式，由 `read_frame`/`poll` 取帧。不提供双出口同时消费。
 - 事件回调发生在库内部的异步工作线程，调用方需自行 marshal 到自己的线程模型；
-  **不要在回调内调用 `call_sync`**（会死锁）。
-- 麦克风 / 屏幕帧等高频二进制数据走 `read_frame` 专用 out-buffer 接口，不经过 JSON。
+  **不要在回调内调用 `call_sync`**（会死锁）。`call_sync` 走独立的同步结果通路，不经事件队列。
+- `shutdown` 后允许重新 `init`；同一 `req_id` 重复投递会被拒绝。
+- 以上 6 个为核心闭环，另有查询自描述（`list_commands_json`、`has_capability` 等 8 个）、
+  调用控制（`call_cancel`、`poll` 等 5 个）、**88 个强类型命令直连**、日志与配置（4 个），
+  合计 **111 个导出函数**。完整契约见
+  [设计文档](docs/superpowers/specs/2026-10-06-c-abi-ffi-design.md)。
 
 ## 构建
 
 ### 前置条件
 
-- Rust（stable）、Node.js（仅用于编译期内嵌资源的准备脚本）
-- 平台相关：Windows 需 MSVC 工具链；Linux 需 WebKitGTK 相关依赖（阶段 2 移除 `tauri` 依赖后不再需要）；
-  Android 需 `cargo ndk`
+- Rust（stable）；Windows 需 MSVC 工具链；Android 需 `cargo ndk`
+- Node.js 仅用于运行 JS 测试（`node --test tests/*.test.mjs`），编译期不再需要
+- Linux 构建仍需 WebKitGTK / GTK 系统库（`Cargo.toml` 尚未移除 `tauri` 依赖，属待办工作）
 
 ### 第一步：准备第三方二进制（首次 clone 后必做）
 
@@ -126,9 +124,11 @@ cargo build --release
 ```
 
 当前产物为 `[lib] crate-type` 中的 `staticlib` / `cdylib` / `rlib`
-（crate 名暂为 `mctier_lib`，阶段 5 将随项目改名一并调整）。
-阶段 4 完成后，对外交付形态为 C ABI 动态库
-`libmctier_core.so` / `mctier_core.dll`（Android 同名 `.so`）及配套头文件。
+（crate 名暂为 `mctier_lib`，后续随项目改名一并调整）。
+对外交付形态为 C ABI 动态库 `mctier.dll`（Windows）、`libmctier.so`（Linux / Android）、
+`libmctier.dylib`（macOS）及配套头文件 `mctier_core.h`。
+其中 Windows 与 Linux 内嵌 EasyTier 二进制，macOS 与 Android 由宿主通过
+`init` 的 `options_json` 注入路径。
 
 ---
 

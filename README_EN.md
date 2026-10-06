@@ -6,7 +6,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/version-0.1.0--dev-blue?style=flat-square" alt="Version">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-brightgreen?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android-brightgreen?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/FFI-C%20ABI-orange?style=flat-square" alt="FFI">
   <img src="https://img.shields.io/badge/license-Custom%20Source--Available-orange?style=flat-square" alt="License">
 </div>
@@ -48,8 +48,7 @@ networking:
 | Virtual networking | EasyTier start/stop, virtual IP allocation, node selection, KCP/QUIC advanced options, exit nodes |
 | Lobby | create / join / leave, player list, host management (announcements, capacity, kick), public lobby plaza, invitations |
 | Signaling & NAT traversal | WebSocket signaling, P2P hole punching, member status & heartbeat, reconnect self-healing, private signaling endpoints |
-| Voice | voice channels, voice squads, microphone toggle & mute, ICE discovery, voice message transcription |
-| Chat | P2P text / image / emoji messages, P-256 signature authentication, message history & cleanup |
+| Chat | P2P text / image / emoji / voice-note messages, P-256 signature authentication, message history & cleanup |
 | File collaboration | local share management, remote file browsing & download, share password verification, transfer progress events |
 | Game enhancements | Minecraft LAN world discovery, MC LAN broadcast, server scanning & latency measurement |
 | Diagnostics | network diagnostics (virtual adapter / firewall / UDP port), one-click firewall rule, connection quality scoring, log access |
@@ -58,25 +57,20 @@ networking:
 Pure GUI capabilities (window opacity, tray, global hotkeys, danmaku overlay, GameHUD, file-open
 dialogs, …) are **out of scope** and left to the caller.
 
-## Project Status
+> ## ⚠️ Project positioning: DEMO
+>
+> **This is a DEMO, not a production release. It is not guaranteed to be fully usable.**
+> It makes no promise of long-term stability in production, offers no ABI compatibility
+> guarantee, and runs no CI. The engineering itself is still held to a production-grade
+> standard (complete contracts, artifacts for all four platforms, explicit error and
+> concurrency semantics) — "DEMO" limits the **delivery commitment**, not the **quality bar**.
+>
+> The following capabilities have been **removed** from this project: **real-time voice**
+> (voice channels / voice squads / microphone / ICE discovery / transcription),
+> **screen sharing**, **Quark cloud-drive daily assist**, and the **built-in emoji asset pack**.
+> Text, image, emoji and **voice-note** messages in chat remain (message storage, not a real-time stream).
 
-The migration proceeds in phases. We are currently at **Phase 2 (decoupling Tauri)**:
-
-| Phase | Content | Status |
-| --- | --- | --- |
-| 0 | LICENSE derivative notice, source file attribution headers, README / SECURITY rewrite | ✅ done |
-| 1 | Remove GUI (React frontend, Tauri shell, pure-GUI commands & modules) | ✅ done |
-| 2 | Decouple Tauri (event bus, path injection, remove `AppHandle`) | ⏳ in progress |
-| 3 | Refactor command layer into a unified dispatch table | ⏳ |
-| 4 | C ABI FFI layer, header file, C example | ⏳ |
-| 5 | Build system & renaming (including Android cross-compilation) | ⏳ |
-| 6 | Three-platform verification and test cleanup | ⏳ |
-
-> After Phase 1 the frontend, the Tauri shell and pure-GUI commands are gone and `src-tauri/`
-> has been renamed to `src/`. The `tauri` dependency is still in `Cargo.toml` (that is Phase 2
-> work), so `cargo build` on Linux still requires the WebKitGTK / GTK system libraries first.
-
-## FFI Design (to be implemented in Phase 4)
+## FFI Design
 
 ```c
 typedef void (*MctierEventCb)(const char* event, const char* payload_json, void* user_data);
@@ -91,18 +85,26 @@ void    mctier_core_shutdown(void);
 
 - `call` is asynchronous; the result is delivered back as a `command-result` event carrying
   `req_id`, mirroring the original MCTier `invoke` model for easy migration.
+- **The sink mode is fixed at `init`**: pass a callback → the library dispatches on a single
+  internal thread in order (`read_frame`/`poll` then always return 0); pass `NULL` → pure pull
+  mode where `read_frame`/`poll` fetch frames. There is no dual-consumer mode.
 - Event callbacks arrive on the library's internal worker thread; marshal them to your own thread
-  model. **Never call `call_sync` from inside a callback** (deadlock).
-- High-frequency binary data (microphone / screen frames) goes through the dedicated out-buffer
-  `read_frame` API instead of JSON.
+  model. **Never call `call_sync` from inside a callback** (deadlock). `call_sync` uses a separate
+  synchronous result path and does not go through the event queue.
+- `init` may be called again after `shutdown`; re-submitting the same `req_id` is rejected.
+- The six functions above are the core loop. There are also query/self-description (8),
+  call control (5), **88 strongly-typed command entry points**, and logging/config (4) —
+  **111 exported functions** in total. Full contracts live in the
+  [design document](docs/superpowers/specs/2026-10-06-c-abi-ffi-design.md).
 
 ## Building
 
 ### Prerequisites
 
-- Rust (stable), Node.js (only for build-time asset preparation scripts)
-- Platform specifics: MSVC toolchain on Windows; WebKitGTK dependencies on Linux (no longer
-  needed once Phase 2 drops the `tauri` dependency); `cargo ndk` for Android
+- Rust (stable); MSVC toolchain on Windows; `cargo ndk` for Android
+- Node.js only to run the JS tests (`node --test tests/*.test.mjs`); not needed to build
+- Linux builds still require the WebKitGTK / GTK system libraries (`Cargo.toml` has not yet
+  dropped the `tauri` dependency — outstanding work)
 
 ### Step 1: prepare third-party binaries (required after the first clone)
 
@@ -131,9 +133,11 @@ cargo build --release
 ```
 
 The current output is the `staticlib` / `cdylib` / `rlib` declared under `[lib] crate-type`
-(the crate is still named `mctier_lib`; Phase 5 renames it along with the rest of the project).
-From Phase 4 on, the delivered artifact is a C ABI dynamic library —
-`libmctier_core.so` / `mctier_core.dll` (same name on Android) — plus its header file.
+(the crate is still named `mctier_lib`; it will be renamed together with the rest of the project).
+The delivered artifact is the C ABI dynamic library `mctier.dll` (Windows),
+`libmctier.so` (Linux / Android), `libmctier.dylib` (macOS) plus the header `mctier_core.h`.
+Windows and Linux embed the EasyTier binaries; macOS and Android take paths from the host
+via `init`'s `options_json`.
 
 ---
 
