@@ -32,10 +32,9 @@ pub mod hosts_security;
 pub mod unix_hosts_helper;
 pub mod virtual_network;
 
-// 语音服务模块
+// 特权提权 Helper（Windows 生产模式启动 easytier / 写 hosts / 防火墙）
 #[cfg(windows)]
 pub mod privileged_helper;
-pub mod voice_service;
 #[cfg(windows)]
 pub mod windows_paths;
 
@@ -67,7 +66,6 @@ pub mod file_transfer;
 pub mod chat_service;
 
 // 聊天鉴权：每成员密钥对 + 请求签名（消除虚拟IP伪造空间）
-pub mod builtin_emoji;
 pub mod chat_auth;
 pub mod secret_store;
 
@@ -76,15 +74,6 @@ pub mod minecraft_discovery;
 
 // Minecraft 局域网中继桥（让虚拟网内的 MC 世界出现在本机 Minecraft 局域网列表）
 pub mod mc_lan_bridge;
-
-pub mod speech_transcription;
-pub mod native_capture;
-pub mod native_microphone;
-pub mod voice_ice;
-pub mod quark_support;
-pub mod quark_background;
-#[cfg(windows)]
-mod quark_scheduler;
 
 
 // Linux 平台支撑（TUN 文件能力 / 网卡检测 / 防火墙 / XDG 自启动）

@@ -259,7 +259,6 @@ pub async fn join_lobby(
     // 获取各个服务的引用
     let lobby_manager = core.get_lobby_manager();
     let network_service = core.get_network_service();
-    let voice_service = core.get_voice_service();
     let p2p_signaling = core.get_p2p_signaling();
     let file_transfer = core.get_file_transfer();
     let chat_service = core.get_chat_service();
@@ -290,14 +289,6 @@ pub async fn join_lobby(
     {
         Ok(lobby) => {
             log::info!("成功加入大厅: {}", lobby.name);
-
-            // 初始化语音服务
-            let voice_svc = voice_service.lock().await;
-            if let Err(e) = voice_svc.initialize().await {
-                log::warn!("语音服务初始化失败: {}", e);
-                // 语音服务失败不应该阻止加入大厅
-            }
-            drop(voice_svc);
 
             // 获取虚拟IP（用于P2P信令服务和HTTP文件服务器）
             let virtual_ip = lobby.virtual_ip.clone();
@@ -391,7 +382,6 @@ pub async fn join_lobby(
 /// * `Err(String)` - 错误信息
 #[tauri::command]
 pub async fn leave_lobby(state: State<'_, AppState>) -> Result<(), String> {
-    crate::modules::voice_ice::stop();
     log::info!("收到退出大厅命令");
 
     let core = state.core.lock().await;
@@ -399,7 +389,6 @@ pub async fn leave_lobby(state: State<'_, AppState>) -> Result<(), String> {
     // 获取各个服务的引用
     let lobby_manager = core.get_lobby_manager();
     let network_service = core.get_network_service();
-    let voice_service = core.get_voice_service();
     let p2p_signaling = core.get_p2p_signaling();
     let file_transfer = core.get_file_transfer();
     let chat_service = core.get_chat_service();
@@ -425,13 +414,6 @@ pub async fn leave_lobby(state: State<'_, AppState>) -> Result<(), String> {
     }
     drop(p2p_svc);
 
-    // 清理语音服务
-    let voice_svc = voice_service.lock().await;
-    if let Err(e) = voice_svc.cleanup().await {
-        log::warn!("清理语音服务时发生错误: {}", e);
-    }
-    drop(voice_svc);
-
     // 退出大厅
     let mut lobby_mgr = lobby_manager.lock().await;
     let network_svc = network_service.lock().await;
@@ -451,146 +433,6 @@ pub async fn leave_lobby(state: State<'_, AppState>) -> Result<(), String> {
         }
         Err(e) => {
             log::error!("退出大厅失败: {}", e);
-            Err(e.to_string())
-        }
-    }
-}
-
-// ==================== 语音控制命令 ====================
-
-/// 切换麦克风状态
-///
-/// # 返回
-/// * `Ok(bool)` - 新的麦克风状态（true=开启，false=关闭）
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn toggle_mic(state: State<'_, AppState>, app: tauri::AppHandle) -> Result<bool, String> {
-    log::info!("收到切换麦克风命令");
-
-    let core = state.core.lock().await;
-
-    // 使用 AppCore 的 toggle_mic 方法，它会正确处理状态切换
-    match core.toggle_mic().await {
-        Ok(new_state) => {
-            log::info!("麦克风状态已切换: {}", new_state);
-
-            // 发送事件到前端更新UI
-            if let Err(e) = app.emit("mic-toggled", new_state) {
-                log::error!("发送麦克风状态事件失败: {}", e);
-            }
-
-            Ok(new_state)
-        }
-        Err(e) => {
-            log::error!("切换麦克风失败: {}", e);
-            Err(e.to_string())
-        }
-    }
-}
-
-/// 显式设置麦克风状态。用于浏览器权限请求失败后把 Rust 与前端状态一起回滚。
-#[tauri::command]
-pub async fn set_mic_enabled(
-    enabled: bool,
-    state: State<'_, AppState>,
-    app: tauri::AppHandle,
-) -> Result<bool, String> {
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let new_state = voice_service
-        .lock()
-        .await
-        .set_mic_enabled(enabled)
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if let Err(e) = app.emit("mic-toggled", new_state) {
-        log::error!("发送麦克风状态事件失败: {}", e);
-    }
-    Ok(new_state)
-}
-
-/// Restart into the permission-reset startup path. The new process waits for this
-/// WebView to exit before deleting EBWebView, avoiding locked-file failures.
-#[tauri::command]
-pub fn reset_microphone_permission(app: tauri::AppHandle) -> Result<(), String> {
-    let exe = std::env::current_exe().map_err(|e| format!("获取程序路径失败: {}", e))?;
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        std::process::Command::new(&exe)
-            .arg("--reset-microphone-permission")
-            .creation_flags(0x08000000)
-            .spawn()
-            .map_err(|e| format!("重启 MCTier 失败: {}", e))?;
-    }
-    #[cfg(not(windows))]
-    {
-        std::process::Command::new(&exe)
-            .arg("--reset-microphone-permission")
-            .spawn()
-            .map_err(|e| format!("重启 MCTier 失败: {}", e))?;
-    }
-    app.exit(0);
-    Ok(())
-}
-
-/// 静音或取消静音指定玩家
-///
-/// # 参数
-/// * `player_id` - 玩家 ID
-/// * `muted` - true=静音，false=取消静音
-///
-/// # 返回
-/// * `Ok(())` - 操作成功
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn mute_player(
-    player_id: String,
-    muted: bool,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    log::info!("收到静音玩家命令: player_id={}, muted={}", player_id, muted);
-
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    match voice_svc.mute_player(&player_id, muted).await {
-        Ok(_) => {
-            log::info!("玩家 {} 静音状态已更新: {}", player_id, muted);
-            Ok(())
-        }
-        Err(e) => {
-            log::error!("更新玩家静音状态失败: {}", e);
-            Err(e.to_string())
-        }
-    }
-}
-
-/// 全局静音或取消静音所有玩家
-///
-/// # 参数
-/// * `muted` - true=静音所有玩家，false=取消静音所有玩家
-///
-/// # 返回
-/// * `Ok(())` - 操作成功
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn mute_all(muted: bool, state: State<'_, AppState>) -> Result<(), String> {
-    log::info!("收到全局静音命令: muted={}", muted);
-
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    match voice_svc.mute_all(muted).await {
-        Ok(_) => {
-            log::info!("全局静音状态已更新: {}", muted);
-            Ok(())
-        }
-        Err(e) => {
-            log::error!("更新全局静音状态失败: {}", e);
             Err(e.to_string())
         }
     }
@@ -668,26 +510,6 @@ pub async fn update_config(
 
 // ==================== 系统信息命令 ====================
 
-/// 获取可用的音频设备列表
-///
-/// # 返回
-/// * `Ok(Vec<AudioDevice>)` - 音频设备列表
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn get_audio_devices(state: State<'_, AppState>) -> Result<Vec<AudioDevice>, String> {
-    log::info!("收到获取音频设备命令");
-
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    let devices = voice_svc.get_audio_devices().await;
-
-    log::info!("返回 {} 个音频设备", devices.len());
-
-    Ok(devices)
-}
-
 /// 获取当前应用状态
 ///
 /// # 返回
@@ -736,60 +558,6 @@ pub async fn get_players(state: State<'_, AppState>) -> Result<Vec<Player>, Stri
     log::info!("返回 {} 个玩家", players.len());
 
     Ok(players)
-}
-
-/// 获取麦克风状态
-///
-/// # 返回
-/// * `Ok(bool)` - 麦克风状态（true=开启，false=关闭）
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn get_mic_status(state: State<'_, AppState>) -> Result<bool, String> {
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    let status = voice_svc.is_mic_enabled();
-
-    Ok(status)
-}
-
-/// 获取全局静音状态
-///
-/// # 返回
-/// * `Ok(bool)` - 全局静音状态（true=静音，false=未静音）
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn get_global_mute_status(state: State<'_, AppState>) -> Result<bool, String> {
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    let status = voice_svc.is_global_muted();
-
-    Ok(status)
-}
-
-/// 检查玩家是否被静音
-///
-/// # 参数
-/// * `player_id` - 玩家 ID
-///
-/// # 返回
-/// * `Ok(bool)` - 是否被静音（true=静音，false=未静音）
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn is_player_muted(
-    player_id: String,
-    state: State<'_, AppState>,
-) -> Result<bool, String> {
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    let is_muted = voice_svc.is_player_muted(&player_id).await;
-
-    Ok(is_muted)
 }
 
 /// 获取网络连接状态

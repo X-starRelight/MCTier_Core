@@ -669,26 +669,6 @@ try {
     }
 }
 
-#[tauri::command]
-pub async fn transcribe_voice_message(
-    wav_data: Vec<u8>,
-    language: String,
-    app: tauri::AppHandle,
-    progress: tauri::ipc::Channel<crate::modules::speech_transcription::SpeechProgress>,
-) -> Result<String, String> {
-    if wav_data.len() < 44
-        || wav_data.len() > 4 * 1024 * 1024
-        || &wav_data[..4] != b"RIFF"
-        || &wav_data[8..12] != b"WAVE"
-    {
-        return Err("语音数据格式无效".into());
-    }
-    if !matches!(language.as_str(), "zh-CN" | "en-US") {
-        return Err("不支持的识别语言".into());
-    }
-    crate::modules::speech_transcription::transcribe(wav_data, app, progress).await
-}
-
 /// 发送P2P聊天消息
 ///
 /// # 参数

@@ -8,7 +8,6 @@
 
 use crate::modules::lobby_manager::Player;
 use crate::modules::network_service::ConnectionStatus;
-use crate::modules::voice_service::PlayerStatus;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
@@ -32,13 +31,6 @@ pub struct PlayerLeftEvent {
     pub player_name: String,
     /// 事件时间戳
     pub timestamp: i64,
-}
-
-/// 玩家状态更新事件数据
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PlayerStatusUpdateEvent {
-    /// 玩家状态
-    pub status: PlayerStatus,
 }
 
 /// 网络状态变化事件数据
@@ -76,15 +68,6 @@ pub struct LobbyUpdateEvent {
     pub timestamp: i64,
 }
 
-/// 麦克风状态变化事件数据
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MicStatusChangeEvent {
-    /// 麦克风是否开启
-    pub enabled: bool,
-    /// 事件时间戳
-    pub timestamp: i64,
-}
-
 /// 应用状态变化事件数据
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppStateChangeEvent {
@@ -102,9 +85,6 @@ pub const EVENT_PLAYER_JOINED: &str = "player-joined";
 /// 玩家离开事件名称
 pub const EVENT_PLAYER_LEFT: &str = "player-left";
 
-/// 玩家状态更新事件名称
-pub const EVENT_PLAYER_STATUS_UPDATE: &str = "player-status-update";
-
 /// 网络状态变化事件名称
 pub const EVENT_NETWORK_STATUS_CHANGE: &str = "network-status-change";
 
@@ -113,9 +93,6 @@ pub const EVENT_ERROR: &str = "error";
 
 /// 大厅信息更新事件名称
 pub const EVENT_LOBBY_UPDATE: &str = "lobby-update";
-
-/// 麦克风状态变化事件名称
-pub const EVENT_MIC_STATUS_CHANGE: &str = "mic-status-change";
 
 /// 应用状态变化事件名称
 pub const EVENT_APP_STATE_CHANGE: &str = "app-state-change";
@@ -170,34 +147,6 @@ pub fn emit_player_left(
     app_handle
         .emit(EVENT_PLAYER_LEFT, event)
         .map_err(|e| format!("推送玩家离开事件失败: {}", e))
-}
-
-/// 推送玩家状态更新事件
-///
-/// # 参数
-/// * `app_handle` - Tauri 应用句柄
-/// * `status` - 玩家状态信息
-///
-/// # 返回
-/// * `Ok(())` - 推送成功
-/// * `Err(String)` - 推送失败
-pub fn emit_player_status_update(
-    app_handle: &AppHandle,
-    status: PlayerStatus,
-) -> Result<(), String> {
-    let event = PlayerStatusUpdateEvent {
-        status: status.clone(),
-    };
-
-    log::debug!(
-        "推送玩家状态更新事件: {} (麦克风: {})",
-        status.player_id,
-        status.mic_enabled
-    );
-
-    app_handle
-        .emit(EVENT_PLAYER_STATUS_UPDATE, event)
-        .map_err(|e| format!("推送玩家状态更新事件失败: {}", e))
 }
 
 /// 推送网络状态变化事件
@@ -291,31 +240,6 @@ pub fn emit_lobby_update(
         .map_err(|e| format!("推送大厅信息更新事件失败: {}", e))
 }
 
-/// 推送麦克风状态变化事件
-///
-/// # 参数
-/// * `app_handle` - Tauri 应用句柄
-/// * `enabled` - 麦克风是否开启
-///
-/// # 返回
-/// * `Ok(())` - 推送成功
-/// * `Err(String)` - 推送失败
-pub fn emit_mic_status_change(app_handle: &AppHandle, enabled: bool) -> Result<(), String> {
-    let event = MicStatusChangeEvent {
-        enabled,
-        timestamp: chrono::Utc::now().timestamp(),
-    };
-
-    log::info!(
-        "推送麦克风状态变化事件: {}",
-        if enabled { "开启" } else { "关闭" }
-    );
-
-    app_handle
-        .emit(EVENT_MIC_STATUS_CHANGE, event)
-        .map_err(|e| format!("推送麦克风状态变化事件失败: {}", e))
-}
-
 /// 推送应用状态变化事件
 ///
 /// # 参数
@@ -354,30 +278,6 @@ pub fn emit_players_joined(app_handle: &AppHandle, players: Vec<Player>) -> Resu
 
     for player in players {
         if emit_player_joined(app_handle, player).is_ok() {
-            success_count += 1;
-        }
-    }
-
-    Ok(success_count)
-}
-
-/// 推送多个玩家状态更新事件
-///
-/// # 参数
-/// * `app_handle` - Tauri 应用句柄
-/// * `statuses` - 玩家状态列表
-///
-/// # 返回
-/// * `Ok(usize)` - 成功推送的事件数量
-/// * `Err(String)` - 推送失败
-pub fn emit_player_statuses_update(
-    app_handle: &AppHandle,
-    statuses: Vec<PlayerStatus>,
-) -> Result<usize, String> {
-    let mut success_count = 0;
-
-    for status in statuses {
-        if emit_player_status_update(app_handle, status).is_ok() {
             success_count += 1;
         }
     }
@@ -485,20 +385,6 @@ mod tests {
     }
 
     #[test]
-    fn test_mic_status_change_event_serialization() {
-        let event = MicStatusChangeEvent {
-            enabled: true,
-            timestamp: 1234567890,
-        };
-
-        let json = serde_json::to_string(&event).unwrap();
-        let deserialized: MicStatusChangeEvent = serde_json::from_str(&json).unwrap();
-
-        assert_eq!(deserialized.enabled, true);
-        assert_eq!(deserialized.timestamp, 1234567890);
-    }
-
-    #[test]
     fn test_lobby_update_event_serialization() {
         let event = LobbyUpdateEvent {
             lobby_id: "lobby_123".to_string(),
@@ -520,11 +406,9 @@ mod tests {
     fn test_event_name_constants() {
         assert_eq!(EVENT_PLAYER_JOINED, "player-joined");
         assert_eq!(EVENT_PLAYER_LEFT, "player-left");
-        assert_eq!(EVENT_PLAYER_STATUS_UPDATE, "player-status-update");
         assert_eq!(EVENT_NETWORK_STATUS_CHANGE, "network-status-change");
         assert_eq!(EVENT_ERROR, "error");
         assert_eq!(EVENT_LOBBY_UPDATE, "lobby-update");
-        assert_eq!(EVENT_MIC_STATUS_CHANGE, "mic-status-change");
         assert_eq!(EVENT_APP_STATE_CHANGE, "app-state-change");
     }
 

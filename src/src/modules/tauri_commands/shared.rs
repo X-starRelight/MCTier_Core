@@ -12,8 +12,6 @@ pub(crate) use crate::modules::config_manager::UserConfig;
 
 pub(crate) use crate::modules::lobby_manager::{Lobby, Player};
 
-pub(crate) use crate::modules::voice_service::AudioDevice;
-
 pub(crate) use std::collections::HashMap;
 
 pub(crate) use std::sync::atomic::{AtomicBool, Ordering};

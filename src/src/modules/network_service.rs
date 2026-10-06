@@ -1780,7 +1780,6 @@ impl NetworkService {
     /// * `Ok(())` - 成功停止
     /// * `Err(AppError)` - 停止失败
     pub async fn stop_easytier(&self) -> Result<(), AppError> {
-        crate::modules::voice_ice::stop();
         log::info!("========================================");
         log::info!("🛑 [StopEasyTier] 开始停止 EasyTier 服务...");
         log::info!("========================================");

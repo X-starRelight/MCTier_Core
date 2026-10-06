@@ -119,36 +119,6 @@ pub async fn broadcast_status_update(
     Ok(())
 }
 
-/// 发送心跳
-///
-/// # 参数
-/// * `player_id` - 玩家ID
-/// * `timestamp` - 时间戳
-///
-/// # 返回
-/// * `Ok(())` - 发送成功
-/// * `Err(String)` - 错误信息
-#[tauri::command]
-pub async fn send_heartbeat(
-    player_id: String,
-    timestamp: i64,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    log::debug!("收到心跳: player={}, timestamp={}", player_id, timestamp);
-
-    let core = state.core.lock().await;
-    let voice_service = core.get_voice_service();
-    let voice_svc = voice_service.lock().await;
-
-    voice_svc
-        .send_heartbeat(&player_id)
-        .await
-        .map_err(|e| e.to_string())?;
-
-    log::debug!("心跳已发送");
-    Ok(())
-}
-
 // ==================== 网络管理命令 ====================
 
 /// 强制停止所有EasyTier进程

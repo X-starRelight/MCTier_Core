@@ -17,7 +17,6 @@ use super::file_transfer::FileTransferService;
 use super::lobby_manager::LobbyManager;
 use super::network_service::{NetworkConfig, NetworkService};
 use super::p2p_signaling::P2PSignalingService;
-use super::voice_service::VoiceService;
 use super::websocket_signaling::WebSocketSignalingServer;
 
 /// 应用程序状态枚举
@@ -41,8 +40,6 @@ pub struct AppCore {
     lobby_manager: Arc<Mutex<LobbyManager>>,
     /// 网络服务
     network_service: Arc<Mutex<NetworkService>>,
-    /// 语音服务
-    voice_service: Arc<Mutex<VoiceService>>,
     /// P2P信令服务
     p2p_signaling: Arc<Mutex<P2PSignalingService>>,
     /// WebSocket信令服务器（创建大厅时使用）
@@ -103,10 +100,6 @@ impl AppCore {
         let lobby_manager = Arc::new(Mutex::new(LobbyManager::new()));
         info!("大厅管理器初始化成功");
 
-        // 初始化语音服务
-        let voice_service = Arc::new(Mutex::new(VoiceService::new()));
-        info!("语音服务初始化成功");
-
         // 初始化P2P信令服务
         let p2p_signaling = Arc::new(Mutex::new(P2PSignalingService::new(47777)));
         info!("P2P信令服务初始化成功");
@@ -131,7 +124,6 @@ impl AppCore {
         Ok(AppCore {
             lobby_manager,
             network_service,
-            voice_service,
             p2p_signaling,
             websocket_signaling,
             file_transfer,
@@ -159,15 +151,6 @@ impl AppCore {
             return Ok(());
         }
         drop(current_state);
-
-        // 初始化语音服务
-        match self.voice_service.lock().await.initialize().await {
-            Ok(_) => info!("语音服务启动成功"),
-            Err(e) => {
-                warn!("语音服务启动失败: {}，语音功能可能不可用", e);
-                // 语音服务失败不应该阻止应用启动
-            }
-        }
 
         info!("应用启动完成");
         Ok(())
@@ -304,11 +287,6 @@ impl AppCore {
         Arc::clone(&self.network_service)
     }
 
-    /// 获取语音服务的引用
-    pub fn get_voice_service(&self) -> Arc<Mutex<VoiceService>> {
-        Arc::clone(&self.voice_service)
-    }
-
     /// 获取配置管理器的引用
     pub fn get_config_manager(&self) -> Arc<Mutex<ConfigManager>> {
         Arc::clone(&self.config_manager)
@@ -373,42 +351,7 @@ impl AppCore {
         info!("✅ WebSocket信令服务器已停止");
         Ok(())
     }
-
-    /// 切换麦克风状态
-    ///
-    /// # 返回
-    ///
-    /// * `Ok(bool)` - 新的麦克风状态（true=开启，false=关闭）
-    /// * `Err(AppError)` - 切换失败的错误信息
-    pub async fn toggle_mic(&self) -> Result<bool, AppError> {
-        info!("切换麦克风状态");
-
-        // 获取当前麦克风状态
-        let voice_service = self.voice_service.lock().await;
-        let current_state = voice_service.is_mic_enabled();
-        let new_state = !current_state;
-
-        // 切换状态
-        drop(voice_service);
-        match self
-            .voice_service
-            .lock()
-            .await
-            .set_mic_enabled(new_state)
-            .await
-        {
-            Ok(state) => {
-                info!("麦克风状态已切换: {} -> {}", current_state, state);
-                Ok(state)
-            }
-            Err(e) => {
-                warn!("切换麦克风状态失败: {}", e);
-                Err(AppError::VoiceError(e.to_string()))
-            }
-        }
-    }
 }
-
 // 实现 Drop trait 以确保资源正确清理
 impl Drop for AppCore {
     fn drop(&mut self) {
@@ -488,13 +431,11 @@ mod tests {
         // 获取各个模块的引用
         let lobby_manager = app_core.get_lobby_manager();
         let network_service = app_core.get_network_service();
-        let voice_service = app_core.get_voice_service();
         let config_manager = app_core.get_config_manager();
 
         // 验证可以锁定这些引用
         assert!(lobby_manager.try_lock().is_ok());
         assert!(network_service.try_lock().is_ok());
-        assert!(voice_service.try_lock().is_ok());
         assert!(config_manager.try_lock().is_ok());
     }
 }
